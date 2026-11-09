@@ -1,0 +1,22 @@
+{
+  "name": "food-rescue-smart-agent",
+  "version": "1.0.0",
+  "description": "AI-Powered Smart Food Rescue & Donation Agent",
+  "scripts": {
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "client": "npm.cmd --prefix client run dev",
+    "build": "npm.cmd --prefix client run build",
+    "test": "node tests/verify_system.js"
+  },
+  "keywords": [
+    "food-rescue",
+    "ai-matching",
+    "zero-hunger",
+    "food-safety",
+    "telugu-ai-chatbot"
+  ],
+  "author": "Food Rescue AI Team",
+  "license": "MIT"
+}
+
