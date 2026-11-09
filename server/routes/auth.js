@@ -91,6 +91,46 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Quick Login (Persona Switcher)
+router.post('/quick-login', (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!role) {
+      return res.status(400).json({ error: 'Role is required for quick login.' });
+    }
+    const normRole = normalizeRole(role);
+    
+    // Find an existing active user with this role
+    let user;
+    if (normRole === 'recipient') {
+      user = db.prepare("SELECT * FROM users WHERE role IN ('recipient', 'receiver') ORDER BY id ASC LIMIT 1").get();
+    } else {
+      user = db.prepare("SELECT * FROM users WHERE role = ? ORDER BY id ASC LIMIT 1").get(normRole);
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: `No registered account found with role '${normRole}'. Please register an account first.` });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role, name: user.name },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const { password: _, ...userSafe } = user;
+
+    res.json({
+      message: 'Quick login successful',
+      token,
+      user: userSafe
+    });
+  } catch (err) {
+    console.error('Quick login error:', err);
+    res.status(500).json({ error: 'Failed to authenticate via quick login' });
+  }
+});
+
 // Login
 router.post('/login', (req, res) => {
   try {

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -21,11 +22,8 @@ export function AuthProvider({ children }) {
   const refreshProfile = async () => {
     try {
       if (!token) return;
-      const res = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await api.getMe();
+      if (data && data.user) {
         setUser(data.user);
         setStats(data.stats);
         setUnreadNotifications(data.unreadNotifications || 0);
@@ -33,21 +31,15 @@ export function AuthProvider({ children }) {
         logout();
       }
     } catch (err) {
-      console.error('Failed to refresh user profile:', err);
+      console.warn('Failed to refresh user profile:', err.message);
+      logout();
     } finally {
       setLoading(false);
     }
   };
 
   const login = async (email, password, role) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, role })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Login failed');
-
+    const data = await api.login(email, password, role);
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('fr_token', data.token);
@@ -56,14 +48,7 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (userData) => {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Registration failed');
-
+    const data = await api.register(userData);
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('fr_token', data.token);
@@ -73,22 +58,15 @@ export function AuthProvider({ children }) {
 
   const quickLogin = async (role) => {
     try {
-      const res = await fetch('/api/auth/quick-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Quick login failed');
-
+      const data = await api.quickLogin(role);
       setToken(data.token);
       setUser(data.user);
       localStorage.setItem('fr_token', data.token);
       await refreshProfile();
       return data.user;
     } catch (err) {
-      console.error(err);
-      alert(err.message);
+      console.error('Quick login failed:', err);
+      alert(err.message || 'Quick login failed');
     }
   };
 

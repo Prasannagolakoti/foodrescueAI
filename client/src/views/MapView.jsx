@@ -43,9 +43,7 @@ export default function MapView({ onViewDetails, onRequestFood }) {
     try {
       const [donationsRes, usersRes] = await Promise.all([
         api.getDonations({ status: 'Available' }),
-        fetch('/api/admin/users?role=receiver', {
-          headers: { ...(localStorage.getItem('fr_token') ? { Authorization: `Bearer ${localStorage.getItem('fr_token')}` } : {}) }
-        }).then(r => r.ok ? r.json() : [])
+        api.getUsers({ role: 'receiver' }).catch(() => [])
       ]);
       setDonations(donationsRes);
       setNgos(usersRes);
